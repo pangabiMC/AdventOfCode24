@@ -9,8 +9,6 @@ with open(filename) as file:
 # part 1
 
 def isSafe(report):
-    #diffs = [i - j for i, j in zip(report, report[1:])]
-    #return (all(abs(i) <= 3 and abs(i) >= 1 for i in diffs)) and not (min(diffs) < 0 < max(diffs))
     return indexOfFirstBad(report) == -1
 
 def indexOfFirstBad(report):
@@ -28,6 +26,7 @@ print(sum(isSafe(report) for report in reports))
 safecount = 0
 for report in reports:
     err = indexOfFirstBad(report)
+    # the report might become safe if the element at the error is removed, or after, or before (depending the kind of error it has)
     if(err == -1 or isSafe(report[:err + 1] + report[err + 2:]) or isSafe(report[:err] + report[err + 1:]) or isSafe(report[:err + 2] + report[err + 3:])):
         safecount += 1
 print(safecount)

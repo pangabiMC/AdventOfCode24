@@ -6,9 +6,7 @@ with open(filename) as file:
 
 # part 1
 regex = "(mul\((\d{1,3}),(\d{1,3})\))"
-result = 0
-for m in re.findall(regex, data):
-    result += int(m[1]) * int(m[2])
+result = sum(int(m[1]) * int(m[2]) for m in re.findall(regex, data))
 print(result)
 
 # part 2

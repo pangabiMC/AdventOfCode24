@@ -12,6 +12,7 @@ for m in re.findall(regex, data):
 print(result)
 
 # part 2
+#        m[0]    m[1] m[3]  m[4]      m[5]
 regex = "(don't)|(do)|(mul\((\d{1,3}),(\d{1,3})\))"
 result = 0
 do = True

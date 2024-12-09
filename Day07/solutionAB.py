@@ -11,6 +11,10 @@ with open(filename) as file:
 # * if the left is divisable by the rightmost element -> divide left and remove the last on the right then recurse with the shorter sequence
 # * if not then remove the last element by subtracting the rightmost from the left and recurse
 # * end recursion if right is only one element
+# Example:
+# isValid(190, [10, 19]) -> (10, [10]) OR (171, [10]) -> True OR False
+#
+# isValid(3267, [81, 40, 27]) -> (121, [81, 40]) OR (3240, [81, 40]) -> (81, [81]) OR (81, [81]) OR (3200, [80]) -> True OR True OR False
 def isValid(left, right) -> bool:
     if len(right) == 1:
         return left == right[0]
@@ -24,6 +28,8 @@ print(result)
 
 # same idea but now another operation added for which the recursion rule is:
 # * if the left ends with the same digits as the rightmost element -> remove those digits from the left and remove the rightmost element from the sequence
+# Example:
+# (486, [6, 8, 6]) -> (81, [6, 8]) OR (48, [6, 8]) OR (480, [6, 8]) -> ...
 def isValidWithAppend(left, right) -> bool:
     if left < 0 or len(right) == 0: # need to check for negative numbers because the negative sign messes up the str search
         return False

@@ -1,40 +1,38 @@
-filename = "Day07/inputtest"
+filename = "Day07/input"
 
+input = []
 with open(filename) as file:
-    lines = [line.strip() for line in file]
+    for l in [line.strip() for line in file]:
+        input.append((int(l.split(':')[0]), [int(i) for i in l.split(':')[1].split()]))
 
 # part 1
 
+# let's do some recursion here - we can start from the end and work our way back in the equation:
+# * if the left is divisable by the rightmost element -> divide left and remove the last on the right then recurse with the shorter sequence
+# * if not then remove the last element by subtracting the rightmost from the left and recurse
+# * end recursion if right is only one element
 def isValid(left, right) -> bool:
     if len(right) == 1:
         return left == right[0]
-    return (left % right[-1] == 0 and isValid(left // right[-1], right[:-1])) or isValid(left - right[-1], right[:-1])
+    return ((left % right[-1] == 0 and isValid(left // right[-1], right[:-1])) or # if divisible then divide and call again
+            isValid(left - right[-1], right[:-1])) # else try the substraction
 
-result = 0
-for l in lines:
-    left = int(l.split(':')[0])
-    right = [int(i) for i in l.split(':')[1].split()]
-    if isValid(left, right):
-        result += left
-
+result = sum(l for (l, r) in input if isValid(l, r))
 print(result)
 
 #part 2
-def isValid2(left, right) -> bool:
-    if len(right) == 0:
+
+# same idea but now another operation added for which the recursion rule is:
+# * if the left ends with the same digits as the rightmost element -> remove those digits from the left and remove the rightmost element from the sequence
+def isValidWithAppend(left, right) -> bool:
+    if left < 0 or len(right) == 0: # need to check for negative numbers because the negative sign messes up the str search
         return False
     if len(right) == 1:
         return left == right[0]
-    concat = int(str(right[-2]) + str(right[-1]))
-    return  ((left % right[-1] == 0 and isValid2(left // right[-1], right[:-1])) or 
-              (left % concat == 0 and isValid2(left // concat, right[:-2])) or
-            isValid2(left - right[-1], right[:-1]) 
-            or isValid2(left, right[:-2] + [concat]))
+    lastRightStr = str(right[-1]) # for readability
+    return  ((left % right[-1] == 0 and isValidWithAppend(left // right[-1], right[:-1])) or # as before, if divisible then divide
+              (len(lastRightStr) < len(str(left)) and str(left)[-len(lastRightStr):] == lastRightStr and isValidWithAppend(int(str(left)[:-len(lastRightStr)]), right[:-1])) or # if left ends with right (as str) then remove
+            isValidWithAppend(left - right[-1], right[:-1])) # as before, try the subtraction
 
-result = 0
-for l in lines:
-    left = int(l.split(':')[0])
-    right = [int(i) for i in l.split(':')[1].split()]
-    if isValid2(left, right):
-        result += left
+result = sum(l for (l, r) in input if isValidWithAppend(l, r))
 print(result)

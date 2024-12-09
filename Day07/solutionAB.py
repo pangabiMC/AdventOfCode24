@@ -31,7 +31,7 @@ def isValidWithAppend(left, right) -> bool:
         return left == right[0]
     lastRightStr = str(right[-1]) # for readability
     return  ((left % right[-1] == 0 and isValidWithAppend(left // right[-1], right[:-1])) or # as before, if divisible then divide
-              (len(lastRightStr) < len(str(left)) and str(left)[-len(lastRightStr):] == lastRightStr and isValidWithAppend(int(str(left)[:-len(lastRightStr)]), right[:-1])) or # if left ends with right (as str) then remove
+            (len(lastRightStr) < len(str(left)) and str(left).endswith(lastRightStr) and isValidWithAppend(int(str(left)[:-len(lastRightStr)]), right[:-1])) or # if left ends with right (as str) then remove
             isValidWithAppend(left - right[-1], right[:-1])) # as before, try the subtraction
 
 result = sum(l for (l, r) in input if isValidWithAppend(l, r))

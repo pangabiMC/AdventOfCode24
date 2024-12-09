@@ -9,7 +9,7 @@ length = len(matr[0])
 # part 1
 
 # Best I can come up with is walking step by step with the guard painting the route as we walk
-# The only neat here idea is rotating the matrix beneath the guard rather than tracking which direction it's going
+# The only neat idea here is rotating the matrix beneath the guard rather than tracking which direction it's going
 
 # Paints the row of the guard from the guard to first obstacle with Xs
 # Returns the new coordinates for the guards (already rotated by 90 degrees)

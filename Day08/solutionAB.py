@@ -9,7 +9,12 @@ with open(filename) as file:
 length = len(matr[0])
 
 # part 1
-
+# We gather all possible tower freqencies into a set [that is all different characters on the map]
+# then one by one we take a frequency, find all the antennas for that frequency [looking up their coordinates in the matrix]
+# generate all possible pairs in the list of antenna coordinates
+# then for all antenna pairs, we calculate the difference vector, substract the diff from the first antenna's position and add it to the 2nd antenna position
+# and that gives us the two new antinodes for those two antennas.
+# When we have all the antinodes, we filter out the duplicates and those which are falling outside of the map boundaries
 antinodes = []
 frequencies = set(matr.flatten()) # each character other than . is a separate frequency
 frequencies.remove('.')

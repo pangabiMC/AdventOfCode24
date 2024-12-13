@@ -1,5 +1,4 @@
-import numpy as np
-filename = "Day11/inputtest"
+filename = "Day11/input"
 
 with open(filename) as file:
     stones = list(map(int, file.read().strip().split()))
@@ -8,6 +7,7 @@ print(stones)
 blink_target = 25
 
 # part 1
+# Easy solution is recursive again... but this won't scale well
 def blink(stone, count) -> int:
     if count == blink_target:
         return 1
@@ -23,47 +23,32 @@ def blink(stone, count) -> int:
 print(sum(blink(stone, 0) for stone in stones))
 
 # part 2
-blink_target = 50
+# Iterative solution is needed here, as well as some packing of the data
+# Observation: when the list gets large there are many items that are the same. 
+# We can group these into a dictionary and calculate the next stone for them at once
+# So instead of a list of stones, we are working on a dictionary, each key is a stone value and its value is the 
+# number of times that stone value appears.
+blink_target = 75
 
-def blink(stone) -> int:
-    workset = {stone : 1}
-    for count in range(0, blink_target):
-        workset.popitem()
-
-
-        for i in range(0, len(workset)):
-            if workset[i] == 0:
-                workset[i] = 1
-            elif len(str(workset[i])) % 2 == 0:
-                s = str(workset[i])
-                workset[i] = int(s[:len(s)//2])
-                workset.append(int(s[len(s)//2:]))
+def blink(stones) -> int:
+    workset = {}
+    for stone in stones:
+        workset[stone] = 1 # all stone value is different in the input, otherwise we would need to set this up by counting them
+    for count in range(0, blink_target): # we do the blinking steps on all stones at once
+        nextset = {} # on each blink we collect the new set of values in a new dictionary
+        while len(workset) > 0: 
+            (stone, count) = workset.popitem() # so lets take each stone in the current set and do the math
+            if stone == 0:
+                stone = 1
+            elif len(str(stone)) % 2 == 0:
+                s = str(stone)
+                stone = int(s[:len(s)//2])
+                new_stone = int(s[len(s)//2:])
+                nextset[new_stone] = nextset.get(new_stone, 0) + count
             else:
-                workset[i] *= 2024
-        print(count)
-        print(len(workset))
-    return len(workset)
+                stone *= 2024
+            nextset[stone] = nextset.get(stone, 0) + count # create the new set by adding the new value, with the count the previous stone had
+        workset = nextset.copy()
+    return sum(workset.values())
 
-print(sum(blink(stone) for stone in stones))
-
-# blink_target = 50
-# cache = {}
-# def blink(stone) -> int:
-#     workset = [(stone, blink_target)]
-#     i = 0
-#     while i < len(workset):
-#         for count in range(0, workset[i][1]):
-#             stone = workset[i][0]
-#             if stone == 0:
-#                 stone = 1
-#             elif len(str(stone)) % 2 == 0:
-#                 s = str(stone)
-#                 stone = int(s[:len(s)//2])
-#                 workset.append((int(s[len(s)//2:]), workset[i][1] - count - 1))
-#             else:
-#                 stone *= 2024
-#             workset[i] = (stone, workset[i][1])
-#         i += 1
-#     return len(workset)
-
-# print(sum(blink(stone) for stone in stones))
+print(blink(stones))

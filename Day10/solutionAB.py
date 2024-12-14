@@ -16,16 +16,10 @@ def getTrailEnd(x, y):
     curr = matr[x][y]
     if curr == 9:
         return [(x, y)]
-    
     ret = []
-    if x - 1 in range(0, length) and matr[x-1][y] == curr + 1:
-        ret += getTrailEnd(x - 1, y)
-    if x + 1 in range(0, length) and matr[x+1][y] == curr + 1:
-        ret +=getTrailEnd(x + 1, y)
-    if y - 1 in range(0, length) and matr[x][y-1] == curr + 1:
-        ret +=getTrailEnd(x, y - 1)
-    if y + 1 in range(0, length) and matr[x][y+1] == curr + 1:
-        ret +=getTrailEnd(x, y + 1)
+    for (newx, newy) in [(x-1, y), (x+1, y), (x, y-1), (x, y+1)]:
+        if newx in range(0, length) and newy in range(0, length) and matr[newx][newy] == curr + 1:
+            ret += getTrailEnd(newx, newy)
     return ret
 
 # convert the list of 9 positions found to a set to get the unique trail ends found

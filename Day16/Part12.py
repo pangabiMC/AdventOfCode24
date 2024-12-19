@@ -17,7 +17,7 @@ def move_cost(prev, curr, next):
         cost = 1001
     return cost
 
-def A_star_search(start, end, matr):
+def A_star_search(start, end, map):
     g = {}
     f = {}
 

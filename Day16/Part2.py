@@ -1,6 +1,7 @@
 import numpy as np
+import itertools
 
-filename = "Day16/inputtest"
+filename = "Day16/input"
 
 with open(filename) as file:
     map = np.array([list(line.strip()) for line in file])
@@ -11,7 +12,9 @@ def h(start, end):
     return abs(end[0] - start[0]) + abs(end[1] - start[1])
 
 def move_cost(prev, curr, next):
-    if curr[0] - prev[0] == next[0] - curr[0] and curr[1] - prev[1] == next[1] - curr[1]: # we are not changing direction
+    if prev == curr:
+        cost = 0
+    elif curr[0] - prev[0] == next[0] - curr[0] and curr[1] - prev[1] == next[1] - curr[1]: # we are not changing direction
         cost = 1
     else: 
         cost = 1001
@@ -25,6 +28,37 @@ def get_min(from_set : set, priority: dict):
             currentF = priority[pos]
             current = pos
     return current
+
+def dfs(start, end, map, limit):
+    curr_path = []
+    visited = set()
+    paths = []
+
+    def dfs_rec(prev : tuple, curr : tuple, end : tuple, curr_cost : int):
+        if curr == end:
+            if curr_cost == limit:
+                paths.append([x for x in curr_path])
+            return
+
+        for n in [(curr[0]-1, curr[1]), (curr[0]+1, curr[1]), (curr[0], curr[1]-1), (curr[0], curr[1]+1)]:
+            if n[0] < 0 or n[1] < 0 or n[0] >= height or n[1] >= width or map[n] == '#':
+                continue
+            if n in visited:
+                continue
+            cost = move_cost(prev, curr, n)
+            if curr_cost + cost + h(n, end) <= limit:
+                visited.add(n)
+                curr_path.append(n)
+
+                dfs_rec(curr, n, end, curr_cost + cost)
+                
+                curr_path.pop()
+                visited.remove(n)
+
+    dfs_rec((start[0], start[1]-1), start, end, 0)
+    return paths
+
+
 
 def dijkstra(start, end, map):
     dist = {}
@@ -141,9 +175,18 @@ def get_all_paths(map, came_from, v):
 start = list(zip(*np.where(map == 'S')))[0]
 end = list(zip(*np.where(map == 'E')))[0]
 
-c = dijkstra(start, end, map)
+(path, cost) = A_star_search(start, end, map)
+allPaths = dfs(start, end, map, cost)
+
+print(allPaths)
+
+merged = list(itertools.chain.from_iterable(allPaths))
+printPath(map, merged)
+print(len(list(zip(*np.where(map == 'o'))))+1)
+
+#c = dijkstra(start, end, map)
 #print(c)
-get_all_paths(map.copy(), c, end)
+#get_all_paths(map.copy(), c, end)
 
 # (path, cost) = A_star_search(start, end, map)
 # print(path)

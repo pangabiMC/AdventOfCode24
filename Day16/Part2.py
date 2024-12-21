@@ -1,7 +1,7 @@
 import numpy as np
 import itertools
 
-filename = "Day16/inputtest"
+filename = "Day16/input"
 
 with open(filename) as file:
     map = np.array([list(line.strip()) for line in file])
@@ -52,10 +52,10 @@ def A_star_search(first_prev, start, end, map):
         current = get_min(open, f)
         
         if current == end:
-            path = [(current, f[current])]
+            path = [(current, g[current])]
             while current in came_from:
                 current = came_from[current]
-                path.append((current, f[current] if current in f else 0))
+                path.append((current, g[current] if current in g else 0))
             return path, f[end]
         
         open.remove(current)
@@ -110,17 +110,21 @@ paths = []
 
 (path, cost) = A_star_search(start_prev, start, end, map)
 paths.append(path)
-for i in range(0, len(path)-1):
-    (curr, curr_cost) = path[i]
-    prev = path[i-1][0] if i > 0 else (end[0], end[1]+1)
-    for n in get_neighbours(curr, map, width, height):
-        if (i < 1 or n != path[i-1][0]) and n != path[i+1][0]:
-            m = map.copy()
-            m[curr] = '#'
-            m[start_prev] = '.'
-            alt_path = A_star_search(curr, n, start_prev, m)
-            if alt_path != None and alt_path[1] + move_cost(prev, curr, n) <= path[i-1][1]:
-                paths.append(alt_path[0])
+
+def find_alternative_paths(path, paths, end):
+    for i in range(0, len(path)-1):
+        curr = path[i][0]
+        prev = path[i-1][0] if i > 0 else end
+        for n in get_neighbours(curr, map, width, height):
+            if (i < 1 or n != path[i-1][0]) and n != path[i+1][0]:
+                m = map.copy()
+                m[curr] = '#'
+                alt_path = A_star_search(start_prev, start, n, m)
+                if alt_path != None and alt_path[1] + move_cost(prev, curr, n) <= path[i-1][1]:
+                    paths.append(alt_path[0])
+                    find_alternative_paths(alt_path[0], paths, prev)
+
+find_alternative_paths(path, paths, end)
 
 result = len(set(node for (node, c) in itertools.chain.from_iterable(paths)))
 printPath(map, list((node for (node, c) in itertools.chain.from_iterable(paths))))

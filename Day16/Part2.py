@@ -1,7 +1,7 @@
 import numpy as np
 import itertools
 
-filename = "Day16/input"
+filename = "Day16/inputtest"
 
 with open(filename) as file:
     map = np.array([list(line.strip()) for line in file])
@@ -29,81 +29,15 @@ def get_min(from_set : set, priority: dict):
             current = pos
     return current
 
-def dfs(start, end, map, limit):
-    curr_path = []
-    visited = set()
-    paths = []
-
-    def dfs_rec(prev : tuple, curr : tuple, end : tuple, curr_cost : int):
-        if curr == end:
-            if curr_cost == limit:
-                paths.append([x for x in curr_path])
-            return
-
-        for n in [(curr[0]-1, curr[1]), (curr[0]+1, curr[1]), (curr[0], curr[1]-1), (curr[0], curr[1]+1)]:
-            if n[0] < 0 or n[1] < 0 or n[0] >= height or n[1] >= width or map[n] == '#':
-                continue
-            if n in visited:
-                continue
-            cost = move_cost(prev, curr, n)
-            if curr_cost + cost + h(n, end) <= limit:
-                visited.add(n)
-                curr_path.append(n)
-
-                dfs_rec(curr, n, end, curr_cost + cost)
-                
-                curr_path.pop()
-                visited.remove(n)
-
-    dfs_rec((start[0], start[1]-1), start, end, 0)
-    return paths
-
-
-
-def dijkstra(start, end, map):
-    dist = {}
-    came_from = {}
-    q = set()
-    
-    for v in [(i, j) for i in range(0, height) for j in range(0,width)]:
-        q.add(v)
-        dist[v] = float('inf')
-        came_from[v] = set()
-    
-    came_from[start].add((start[0], start[1]-1))
-    dist[start] = 0
-    
-    while len(q) > 0:
-        curr = get_min(q, dist)
-        
-        # if curr == end:
-        #     path = [curr]
-        #     while curr in came_from:
-        #         curr = came_from[curr]
-        #         path.append(curr)
-        #     path.reverse()
-        #     return path, dist[end]
-
-        q.remove(curr)
-
-        if len(came_from[curr]) == 0:
+def get_neighbours(curr, map, width, height):
+    n = []
+    for neighbour in [(curr[0]-1, curr[1]), (curr[0]+1, curr[1]), (curr[0], curr[1]-1), (curr[0], curr[1]+1)]:
+        if neighbour[0] < 0 or neighbour[1] < 0 or neighbour[0] >= height or neighbour[1] >= width or map[neighbour] == '#':
             continue
+        n.append(neighbour)
+    return n
 
-        for n in [(curr[0]-1, curr[1]), (curr[0]+1, curr[1]), (curr[0], curr[1]-1), (curr[0], curr[1]+1)]:
-            if n[0] < 0 or n[1] < 0 or n[0] >= height or n[1] >= width or map[n] == '#':
-                continue
-            printCurr(map.copy(), curr, n)
-            newDist = min(dist[curr] + move_cost(prev, curr, n) for prev in came_from[curr])
-            if n not in dist or newDist <= dist[n]:
-                came_from[n].add(curr)
-                dist[n] = newDist
-                print(came_from[n])
-                print(dist[n])
-
-    return came_from
-
-
-def A_star_search(start, end, map):
+def A_star_search(first_prev, start, end, map):
     g = {}
     f = {}
 
@@ -112,25 +46,21 @@ def A_star_search(start, end, map):
 
     open = set([start])
     came_from = {}
-    came_from[start] = (start[0], start[1]-1)
+    came_from[start] = first_prev
 
     while len(open) > 0:
         current = get_min(open, f)
         
         if current == end:
-            path = [current]
+            path = [(current, f[current])]
             while current in came_from:
                 current = came_from[current]
-                path.append(current)
-            path.reverse()
+                path.append((current, f[current] if current in f else 0))
             return path, f[end]
         
         open.remove(current)
 
-        for neighbour in [(current[0]-1, current[1]), (current[0]+1, current[1]), (current[0], current[1]-1), (current[0], current[1]+1)]:
-            if neighbour[0] < 0 or neighbour[1] < 0 or neighbour[0] >= height or neighbour[1] >= width or map[neighbour] == '#':
-                continue
-
+        for neighbour in get_neighbours(current, map, width, height):
             newG = g[current] + move_cost(came_from[current], current, neighbour)
             if neighbour not in g.keys() or newG < g[neighbour]:
                 if neighbour not in open:
@@ -139,7 +69,7 @@ def A_star_search(start, end, map):
                 g[neighbour] = newG
                 f[neighbour] = newG + h(neighbour, end)
 
-    raise RuntimeError("A* failed to find a solution")
+    return None
 
 def printPath(map, path):
     for step in path:
@@ -174,21 +104,24 @@ def get_all_paths(map, came_from, v):
 
 start = list(zip(*np.where(map == 'S')))[0]
 end = list(zip(*np.where(map == 'E')))[0]
+start_prev = (start[0], start[1]-1)
 
-(path, cost) = A_star_search(start, end, map)
-allPaths = dfs(start, end, map, cost)
+paths = []
 
-print(allPaths)
+(path, cost) = A_star_search(start_prev, start, end, map)
+paths.append(path)
+for i in range(0, len(path)-1):
+    (curr, curr_cost) = path[i]
+    prev = path[i-1][0] if i > 0 else (end[0], end[1]+1)
+    for n in get_neighbours(curr, map, width, height):
+        if (i < 1 or n != path[i-1][0]) and n != path[i+1][0]:
+            m = map.copy()
+            m[curr] = '#'
+            m[start_prev] = '.'
+            alt_path = A_star_search(curr, n, start_prev, m)
+            if alt_path != None and alt_path[1] + move_cost(prev, curr, n) <= path[i-1][1]:
+                paths.append(alt_path[0])
 
-merged = list(itertools.chain.from_iterable(allPaths))
-printPath(map, merged)
-print(len(list(zip(*np.where(map == 'o'))))+1)
-
-#c = dijkstra(start, end, map)
-#print(c)
-#get_all_paths(map.copy(), c, end)
-
-# (path, cost) = A_star_search(start, end, map)
-# print(path)
-# print(cost)
-# printPath(map.copy(), path)
+result = len(set(node for (node, c) in itertools.chain.from_iterable(paths)))
+printPath(map, list((node for (node, c) in itertools.chain.from_iterable(paths))))
+print(result-1)

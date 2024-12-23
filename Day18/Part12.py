@@ -1,4 +1,4 @@
-import numpy as np
+import time
 
 isTest = False
 
@@ -9,6 +9,9 @@ part1_split = 12 if isTest else 1024
 
 with open(filename) as file:
     corrupted = [tuple(int(i) for i in line.strip().split(',')) for line in file]
+
+# Part 1
+# A* again, nothing spectacular, just plain path finding
 
 # heuristic for A*, simple manhattan distance will do here
 def h(start, end):
@@ -76,17 +79,27 @@ def A_star_search(start, end, corrupted):
 
     return None
 
-def print_mem(width, height, corrupted, path = None):
-    for i in range(0, width):
-        for j in range(0, height):
-            if (j, i) in corrupted:
-                print('#', end="")
-            elif path is not None and (j, i) in path:
-                print('o', end="")
-            else:
-                print('.', end="")
-        print()
-
 (path, cost) = A_star_search((0, 0), (width - 1, height - 1), corrupted[:part1_split])
-#print_mem(width, height, corrupted, set(p[0] for p in path))
-print(cost)
+print(f'Part 1 Solution: {cost}')
+
+# part 2
+# Perhaps there are quicker solutions, we do A* until we find the first that doesn't return a path
+# the only optimisation here is that a block can only happen on a path, so we can skip ahead with the 
+# iterations where the new corrupted block is not on the shortest path
+# Finishes under 5 seconds
+start_time = time.time()
+
+foundPath = True
+iteration = part1_split
+while foundPath is not None:
+    foundPath = A_star_search((0, 0), (width - 1, height - 1), corrupted[:iteration])
+    if foundPath is not None:
+        path_nodes = set(p[0] for p in foundPath[0])
+        while corrupted[iteration - 1] not in path_nodes:
+            iteration += 1
+        print(iteration, end='\r')
+
+print(f'Part 2 Solution: {corrupted[iteration-1]}')
+
+print("--- %s seconds ---" % (time.time() - start_time))
+ 

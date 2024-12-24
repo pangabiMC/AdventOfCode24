@@ -1,8 +1,7 @@
 import re
-import numpy as np
-import itertools
+from functools import cache
 
-isTest = True
+isTest = False
 filename = "Day19/inputtest" if isTest else "Day19/input"
 with open(filename) as file:
     lines = [line.strip() for line in file]
@@ -13,37 +12,18 @@ designs = lines[2:]
 # let the regex engine do the job
 patterns.sort(key=len, reverse=True) # for regex to work correctly here we need to sort the patterns from longest to shortest
 megabrutalregexpattern = '^(' + '|'.join(patterns) + ')+$'
-
 designsMatching = [d for d in designs if re.match(megabrutalregexpattern, d) is not None]
 print(f'Part 1 Solution: {len(designsMatching)}')
 
 # Part 2
-# Ok this is stupid, but had to be done... more and more and more regex
-# not sure if it would finish before the end of the universe
-# (works charmingly for test input ofc)
-# Compound pattern is a pattern that can be made of multiple smaller patterns
-# Let's create all combinations of pattern sets with removing all compound patterns one at a time
-# then do a regex search on all of the possible combinations
-compoundPatterns = set()
-for p in patterns:
-    patternsExcept = patterns[:] # fast copy
-    patternsExcept.remove(p)
-    r = '^(' + '|'.join(patternsExcept) + ')+$'
-    if re.match(r, p) is not None:
-        compoundPatterns.add(p)
+# simple pattern search recursively, to optimise we only check the valid designs from Part 1
+# still, this takes ages without memoization... 
+# lucky python has its own solution to that
+@cache
+def doMatch(design : str) -> int:
+    if len(design) == 0:
+        return 1
+    return sum(doMatch(design[len(p):]) for p in patterns if design.startswith(p))
 
-results = {}
-print(f'total compound length = {len(compoundPatterns)}')
-for L in range(1, len(compoundPatterns) + 1):
-    for subset in itertools.combinations(compoundPatterns, L):
-        patternsExcept = [p for p in patterns if p not in subset]
-        m = '|'.join(patternsExcept)
-        for d in designsMatching:
-            match = re.findall(m, d)
-            if match is not None:
-                results.setdefault(d, set()).add(tuple(match))
-result = 0
-for m in results:
-    result += len(results[m])
-
+result = sum(doMatch(d) for d in designsMatching)
 print(f'Part 2 Solution: {result}')

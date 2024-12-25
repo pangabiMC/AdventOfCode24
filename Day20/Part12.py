@@ -1,10 +1,7 @@
 import numpy as np
 from dataclasses import dataclass
-import itertools
-import time
-import operator
 
-isTest = True
+isTest = False
 filename = "Day20/inputtest" if isTest else "Day20/input"
 minCost = 1 if isTest else 100
 
@@ -15,22 +12,14 @@ height = len(map)
 start = list(zip(*np.where(map == 'S')))[0]
 end = list(zip(*np.where(map == 'E')))[0]
 
-# gets all valid neighbours for a given node in the map
-# valid if within the map and is not a wall '#'
-def getNext(prev, curr, map, width, height):
-    n = []
-    for neighbour in [(curr[0]-1, curr[1]), (curr[0]+1, curr[1]), (curr[0], curr[1]-1), (curr[0], curr[1]+1)]:
-        if prev == neighbour or neighbour[0] < 0 or neighbour[1] < 0 or neighbour[0] >= height or neighbour[1] >= width or map[neighbour] == '#':
-            continue
-        n.append(neighbour)
-    return n
+# Part 1 and 2
+# The puzzle description is not the clearest, but luckly the the simplest possible is the correct one.
+# We first calculate the cost of all nodes (how many steps they are from the Start)
+# Then we try every node for all possible cheats...
+# for part 1 this is fast, for part 2 there must be more optimal solutions but this is still < 10 seconds, so it will do
+# Checking for cheat is simply taking all neighbours for the allowed distance
+# if the neighbour is also on the path, then check how much we could save if that neighbour was the next step (plus the cheat length)
 
-# just some convenience printing for debug
-def printPath(map, path):
-    for step in path:
-        map[step] = 'o'
-    for r in map:
-        print(''.join(r))
 
 @dataclass(eq=True, frozen=True)
 class Cheat:
@@ -38,10 +27,20 @@ class Cheat:
     end: tuple
     saving: int
 
+# gets all valid neighbours for a given node in the map
+# valid if within the map and is not a wall '#'
+def getNext(prev, curr, map, width, height):
+    return [n for n in [
+        (curr[0]-1, curr[1]), 
+        (curr[0]+1, curr[1]), 
+        (curr[0], curr[1]-1), 
+        (curr[0], curr[1]+1)] if (prev != n and
+         n[0] in range(0, height) and n[1] in range(0, width) and map[n] != '#')]
+         
+# gets the list of nodes that are on the path from start to finish, each with their "cost" ie steps from start
 def getPathWithCosts(map, start, end):
     cost = 1
-    path = {}
-    path[start] = 0
+    path = { start: 0 }
     prev = None
     curr = start
     while curr != end:
@@ -52,18 +51,28 @@ def getPathWithCosts(map, start, end):
         cost += 1
     return path
 
-def getCheats(costs, length = 2, mincost = 1):
+# gets the coordinates (regardless if valid) of all neighbours of current reachable from current within maximum N step
+def getNthNeighbours(curr, n) -> list:
+    return [(x,y) for x in range(curr[0]-n, curr[0]+n+1) for y in range(curr[1]-(n-abs(curr[0]-x)), curr[1]+n-abs(curr[0]-x)+1)]
+
+# gets all cheats that allows 'length' amount of going through the wall and that saves at least mincost amount
+def getCheats(costs, length, mincost):
     cheats = set()
     for curr in costs:
-        for neighbour in [(curr[0]-length, curr[1]), (curr[0]+length, curr[1]), (curr[0], curr[1]-length), (curr[0], curr[1]+length)]:
-            if neighbour in costs and costs[neighbour] - mincost >= costs[curr] + length:
-                cheats.add(Cheat(curr, neighbour, costs[neighbour] - costs[curr] - length))
+        for neighbour in getNthNeighbours(curr, length):
+            stepsToNeighbour = abs(neighbour[0] - curr[0]) + abs(neighbour[1] - curr[1])
+            if neighbour in costs and costs[neighbour] - mincost >= costs[curr] + stepsToNeighbour:
+                cheats.add(Cheat(curr, neighbour, costs[neighbour] - costs[curr] - stepsToNeighbour))
     return cheats
 
-p = getPathWithCosts(map, start, end)
-c = list(getCheats(p, mincost=minCost))
-# c.sort(key=operator.attrgetter('saving'))
-# for ch in c:
-#     print(ch)
-print(f'Part1: {len(c)}')
+# Part 1
+path = getPathWithCosts(map, start, end)
+allCheats = list(getCheats(path, 2, minCost))
+print(f'Part1: {len(allCheats)}')
+
+# Part 2
+minCost = 50 if isTest else 100
+allCheats = list(getCheats(path, 20, minCost))
+print(f'Part2: {len(allCheats)}')
+
     

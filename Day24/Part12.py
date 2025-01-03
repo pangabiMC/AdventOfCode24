@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import re
 
-isTest = False
+isTest = True
 filename = "Day24/inputtest" if isTest else "Day24/input"
 
 with open(filename) as file:
@@ -38,7 +38,7 @@ class Op:
 
 Ops = []
 Vars = {}
-
+# https://www.reddit.com/r/adventofcode/comments/1hla5ql/2024_day_24_part_2_a_guide_on_the_idea_behind_the/
 for l in data:
     if len(l) > 4:
         if l[3] == ':':
@@ -53,6 +53,7 @@ while len(Ops) > 0:
 
 zvars = [v for v in Vars if v[0] == 'z']
 zvars.sort(reverse=True)
+print(zvars)
 result = 0
 for z in zvars:
     result ^= int(Vars[z])

@@ -1,7 +1,4 @@
-import numpy as np
-from collections import deque
-
-isTest = True
+isTest = False
 filename = "Day23/inputtest" if isTest else "Day23/input"
 
 # init data
@@ -94,3 +91,25 @@ for t in generate_triangles(connections):
     if any(ti[0] == 't' for ti in t):
         result += 1
 print(result)
+
+
+
+
+def bors_kerbosch_v1(R, P, X, G, C):
+
+    if len(P) == 0 and len(X) == 0:
+        if len(R) > 2:
+            C.append(sorted(R))
+        return 
+    
+    for v in P.union(set([])):
+        bors_kerbosch_v1(R.union(set([v])), P.intersection(G[v]), X.intersection(G[v]), G, C)
+        P.remove(v)
+        X.add(v)
+
+C1 = []
+
+bors_kerbosch_v1(set([]), set(connections.keys()), set([]), connections, C1)
+
+c = max(sorted(C1), key=len)
+print(','.join(c))
